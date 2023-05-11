@@ -17,7 +17,7 @@ hostname=
 logname=
 
 
-function invoke_atlas_api() {
+function dl_atlas_log() {
   param_api_path="$1"
   param_user="$2"
   param_method="$3"
@@ -52,21 +52,9 @@ function invoke_atlas_api() {
     echo "Invoking Atlas API for $param_message..."
   fi
   api_url="$atlas_api_base_url$param_api_path"
-  if [[ "$param_method" == "POST" ]]; then
-    if [[ "$param_user" == "NOUSER" ]]; then
-      response=$( curl --header "Accept: application/json" --header "Content-Type: application/json" --request $param_method "$api_url" --data "$param_data" )
-    else
-      response=$( curl --user "$param_user" --digest --header "Accept: application/json" --header "Content-Type: application/json" --request $param_method "$api_url" --data "$param_data" )
-    fi
-  else
-    response=$( curl --user "$param_user" --digest --header "Accept: application/json" --header "Content-Type: application/json" --request $param_method "$api_url" )
+  if [[ "$param_method" == "GET" ]]; then
+    curl --output ${hostname}-${logname} --user "$param_user" --digest --header "Accept: application/gzip" --header "Content-Type: application/json" --request $param_method "$api_url"
   fi
-
-  echo "API Response:"
-  echo "-------------"
-#  echo $response
-  echo $response | jq -r
-  echo "-------------"
 
   if [[ "$param_message" == "" ]]; then
     echo "Invocation of Atlas API is DONE."
@@ -76,5 +64,6 @@ function invoke_atlas_api() {
 }
 
 
-invoke_atlas_api /groups/${project_id}/clusters/${hostname}/logs/${logname} ${project_pubkey}:${project_pvtkey} GET "{}" "{}"
+dl_atlas_log /groups/${project_id}/clusters/${hostname}/logs/${logname} ${project_pubkey}:${project_pvtkey} GET "{}" "cluster log file"
+
 
